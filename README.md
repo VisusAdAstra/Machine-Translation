@@ -4,7 +4,7 @@ Machine Learning Project.
 
 ## Environment
 Python: 3.8
-Sklearn: 
+Sklearn: 0.23.2
 
 ## Installation
 
@@ -14,11 +14,6 @@ Sklearn:
 ```
 
 2. 
-```
-
-```
-
-3. 
 ```
 
 ```
