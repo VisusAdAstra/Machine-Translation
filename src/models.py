@@ -6,16 +6,36 @@ import torch
 import tensorflow as tf
 
 
+def gru(units):
+  # If you have a GPU, we recommend using CuDNNGRU(provides a 3x speedup than GRU)
+  # the code automatically does that.
+  #tf.compat.v1.keras.layers.CuDNNGRU
+
+  if tf.test.is_built_with_cuda():
+    print("is_built_with_cuda")
+
+  if tf.test.is_gpu_available():
+    print("GPU")
+    return tf.keras.layers.CuDNNGRU(units, 
+                                    return_sequences=True, 
+                                    return_state=True, 
+                                    recurrent_initializer='glorot_uniform')
+  else:
+    print("No GPU")
+    return tf.keras.layers.GRU(units, 
+                                return_sequences=True, 
+                                return_state=True, 
+                                recurrent_activation='sigmoid', 
+                                recurrent_initializer='glorot_uniform')
+
+
 class Encoder(tf.keras.Model):
   def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz):
     super(Encoder, self).__init__()
     self.batch_sz = batch_sz
     self.enc_units = enc_units
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-    self.gru = tf.keras.layers.GRU(self.enc_units,
-                                   return_sequences=True,
-                                   return_state=True,
-                                   recurrent_initializer='glorot_uniform')
+    self.gru = gru(self.enc_units)
 
   def call(self, x, hidden):
     x = self.embedding(x)
@@ -61,10 +81,7 @@ class Decoder(tf.keras.Model):
     self.batch_sz = batch_sz
     self.dec_units = dec_units
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-    self.gru = tf.keras.layers.GRU(self.dec_units,
-                                   return_sequences=True,
-                                   return_state=True,
-                                   recurrent_initializer='glorot_uniform')
+    self.gru = gru(self.dec_units)
     self.fc = tf.keras.layers.Dense(vocab_size)
 
     # used for attention
@@ -90,3 +107,4 @@ class Decoder(tf.keras.Model):
     x = self.fc(output)
 
     return x, state, attention_weights
+
