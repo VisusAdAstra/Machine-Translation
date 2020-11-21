@@ -5,6 +5,9 @@
 import re
 import io
 from string import digits
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import tensorflow as tf
 
 
@@ -76,8 +79,7 @@ def loss_function(real, pred):
 
 
 @tf.function
-def train_step(inp, targ, enc_hidden, BATCH_SIZE, target_sentence_tokenizer, encoder, decoder):
-    optimizer = tf.keras.optimizers.Adam()
+def train_step(inp, targ, enc_hidden, optimizer, BATCH_SIZE, target_sentence_tokenizer, encoder, decoder):
     loss = 0
 
     with tf.GradientTape() as tape:
@@ -108,14 +110,17 @@ def train_step(inp, targ, enc_hidden, BATCH_SIZE, target_sentence_tokenizer, enc
     return batch_loss
 
 
-def evaluate(sentence):
+def evaluate(sentence, units, max_target_length, max_source_length, encoder, decoder, source_tokenizer, target_tokenizer):
+    """
+    Stop predicting when the model predicts the end token or when the max target legth is reached
+    """
     attention_plot = np.zeros((max_target_length, max_source_length))
 
-    sentence = preprocess_sentence(sentence)
+    sentence = preprocess(sentence)
     #print(sentence)
-    #print(source_sentence_tokenizer.word_index)
+    #print(source_tokenizer.word_index)
 
-    inputs = [source_sentence_tokenizer.word_index[i] for i in sentence.split(' ')]
+    inputs = [source_tokenizer.word_index[i] for i in sentence.split(' ')]
     inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
                                                             maxlen=max_source_length,
                                                             padding='post')
@@ -127,7 +132,7 @@ def evaluate(sentence):
     enc_out, enc_hidden = encoder(inputs, hidden)
 
     dec_hidden = enc_hidden
-    dec_input = tf.expand_dims([target_sentence_tokenizer.word_index['start_']], 0)
+    dec_input = tf.expand_dims([target_tokenizer.word_index['start_']], 0)
 
     for t in range(max_target_length):
         predictions, dec_hidden, attention_weights = decoder(dec_input,
@@ -140,9 +145,9 @@ def evaluate(sentence):
 
     predicted_id = tf.argmax(predictions[0]).numpy()
 
-    result += target_sentence_tokenizer.index_word[predicted_id] + ' '
+    result += target_tokenizer.index_word[predicted_id] + ' '
 
-    if target_sentence_tokenizer.index_word[predicted_id] == '_end':
+    if target_tokenizer.index_word[predicted_id] == '_end':
         return result, sentence, attention_plot
 
     # the predicted ID is fed back into the model
@@ -151,8 +156,10 @@ def evaluate(sentence):
     return result, sentence, attention_plot
 
 
-# function for plotting the attention weights
 def plot_attention(attention, sentence, predicted_sentence):
+    """
+    Plot the attention weights
+    """
     fig = plt.figure(figsize=(10,10))
     ax = fig.add_subplot(1, 1, 1)
     ax.matshow(attention, cmap='viridis')
@@ -168,11 +175,11 @@ def plot_attention(attention, sentence, predicted_sentence):
     plt.show()
 
 
-def translate(sentence):
-    result, sentence, attention_plot = evaluate(sentence)
+def translate(sentence, units, max_target_length, max_source_length, encoder, decoder, source_tokenizer, target_tokenizer):
+    result, sentence, attention_plot = evaluate(sentence, units, max_target_length, max_source_length, encoder, decoder, source_tokenizer, target_tokenizer)
 
     print('Input: %s' % (sentence))
     print('Predicted translation: {}'.format(result))
 
     attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
-    plot_attention(attention_plot, sentence.split(' '), result.split(' '))
+    #plot_attention(attention_plot, sentence.split(' '), result.split(' '))
