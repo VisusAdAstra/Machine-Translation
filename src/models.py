@@ -2,7 +2,6 @@
 
 
 
-import torch
 import tensorflow as tf
 
 
@@ -10,11 +9,11 @@ def gru(units):
   # If you have a GPU, we recommend using CuDNNGRU(provides a 3x speedup than GRU)
   # the code automatically does that.
   #tf.compat.v1.keras.layers.CuDNNGRU
+  #tf.keras.layers.CuDNNGRU
+  # if tf.test.is_built_with_cuda():
+  #   print("is_built_with_cuda")
 
-  if tf.test.is_built_with_cuda():
-    print("is_built_with_cuda")
-
-  if tf.test.is_gpu_available():
+  if tf.config.list_physical_devices('GPU'):
     print("GPU")
     return tf.keras.layers.CuDNNGRU(units, 
                                     return_sequences=True, 
@@ -25,6 +24,7 @@ def gru(units):
     return tf.keras.layers.GRU(units, 
                                 return_sequences=True, 
                                 return_state=True, 
+                                reset_after=True,
                                 recurrent_activation='sigmoid', 
                                 recurrent_initializer='glorot_uniform')
 
@@ -35,7 +35,12 @@ class Encoder(tf.keras.Model):
     self.batch_sz = batch_sz
     self.enc_units = enc_units
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-    self.gru = gru(self.enc_units)
+    self.gru = tf.keras.layers.GRU(enc_units, 
+                                return_sequences=True, 
+                                return_state=True, 
+                                reset_after=True,
+                                recurrent_activation='sigmoid', 
+                                recurrent_initializer='glorot_uniform')
 
   def call(self, x, hidden):
     x = self.embedding(x)
