@@ -38,7 +38,6 @@ class Encoder(tf.keras.Model):
     self.gru = tf.keras.layers.GRU(enc_units, 
                                 return_sequences=True, 
                                 return_state=True, 
-                                reset_after=True,
                                 recurrent_activation='sigmoid', 
                                 recurrent_initializer='glorot_uniform')
 
@@ -86,7 +85,10 @@ class Decoder(tf.keras.Model):
     self.batch_sz = batch_sz
     self.dec_units = dec_units
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-    self.gru = gru(self.dec_units)
+    self.gru = tf.keras.layers.GRU(self.dec_units,
+                                   return_sequences=True,
+                                   return_state=True,
+                                   recurrent_initializer='glorot_uniform')
     self.fc = tf.keras.layers.Dense(vocab_size)
 
     # used for attention

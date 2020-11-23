@@ -11,13 +11,6 @@ import matplotlib.ticker as ticker
 import tensorflow as tf
 
 
-def get(p):
-    """
-    """
-    print(f"***\t\tsample {index}\t\t***")
-    return 1 if p[0] < p[1] else 0
-
-
 def preprocess(sentence):
     """
     """
@@ -180,7 +173,7 @@ def translate(sentence, units, max_target_length, max_source_length, encoder, de
 
     print('Input: %s' % (sentence))
     print('Predicted translation: {}'.format(result))
-    print(result)
 
     attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
     plot_attention(attention_plot, sentence.split(' '), result.split(' '))
+
