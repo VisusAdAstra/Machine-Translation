@@ -132,19 +132,19 @@ def evaluate(sentence, units, max_target_length, max_source_length, encoder, dec
                                                             dec_hidden,
                                                             enc_out)
 
-    # storing the attention weights to plot later on
-    attention_weights = tf.reshape(attention_weights, (-1, ))
-    attention_plot[t] = attention_weights.numpy()
+        # storing the attention weights to plot later on
+        attention_weights = tf.reshape(attention_weights, (-1, ))
+        attention_plot[t] = attention_weights.numpy()
 
-    predicted_id = tf.argmax(predictions[0]).numpy()
+        predicted_id = tf.argmax(predictions[0]).numpy()
 
-    result += target_tokenizer.index_word[predicted_id] + ' '
+        result += target_tokenizer.index_word[predicted_id] + ' '
 
-    if target_tokenizer.index_word[predicted_id] == '_end':
-        return result, sentence, attention_plot
+        if target_tokenizer.index_word[predicted_id] == '_end':
+            return result, sentence, attention_plot
 
-    # the predicted ID is fed back into the model
-    dec_input = tf.expand_dims([predicted_id], 0)
+        # the predicted ID is fed back into the model
+        dec_input = tf.expand_dims([predicted_id], 0)
 
     return result, sentence, attention_plot
 
