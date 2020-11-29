@@ -212,3 +212,5 @@ def plot_training(history):
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Validation'], loc='lower right')
     plt.show()
+
+    
