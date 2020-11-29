@@ -8,6 +8,7 @@ from string import digits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from matplotlib.pyplot import figure
 import tensorflow as tf
 
 
@@ -132,19 +133,19 @@ def evaluate(sentence, units, max_target_length, max_source_length, encoder, dec
                                                             dec_hidden,
                                                             enc_out)
 
-    # storing the attention weights to plot later on
-    attention_weights = tf.reshape(attention_weights, (-1, ))
-    attention_plot[t] = attention_weights.numpy()
+        # storing the attention weights to plot later on
+        attention_weights = tf.reshape(attention_weights, (-1, ))
+        attention_plot[t] = attention_weights.numpy()
 
-    predicted_id = tf.argmax(predictions[0]).numpy()
+        predicted_id = tf.argmax(predictions[0]).numpy()
 
-    result += target_tokenizer.index_word[predicted_id] + ' '
+        result += target_tokenizer.index_word[predicted_id] + ' '
 
-    if target_tokenizer.index_word[predicted_id] == '_end':
-        return result, sentence, attention_plot
+        if target_tokenizer.index_word[predicted_id] == '_end':
+            return result, sentence, attention_plot
 
-    # the predicted ID is fed back into the model
-    dec_input = tf.expand_dims([predicted_id], 0)
+        # the predicted ID is fed back into the model
+        dec_input = tf.expand_dims([predicted_id], 0)
 
     return result, sentence, attention_plot
 
@@ -177,3 +178,39 @@ def translate(sentence, units, max_target_length, max_source_length, encoder, de
     attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
     plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
+
+def plot_training(history):
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation masked_categorical_accuracy values
+    plt.plot(history.history['masked_categorical_accuracy'])
+    plt.plot(history.history['val_masked_categorical_accuracy'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation exact_matched_accuracy values
+    plt.plot(history.history['exact_matched_accuracy'])
+    plt.plot(history.history['val_exact_matched_accuracy'])
+    plt.title('Model exact match accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()
+
+    
