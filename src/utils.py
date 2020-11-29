@@ -8,6 +8,7 @@ from string import digits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from matplotlib.pyplot import figure
 import tensorflow as tf
 
 
@@ -177,3 +178,37 @@ def translate(sentence, units, max_target_length, max_source_length, encoder, de
     attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
     plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
+
+def plot_training(history):
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation masked_categorical_accuracy values
+    plt.plot(history.history['masked_categorical_accuracy'])
+    plt.plot(history.history['val_masked_categorical_accuracy'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation exact_matched_accuracy values
+    plt.plot(history.history['exact_matched_accuracy'])
+    plt.plot(history.history['val_exact_matched_accuracy'])
+    plt.title('Model exact match accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()

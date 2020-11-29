@@ -3,6 +3,8 @@
 
 
 import tensorflow as tf
+import tensorflow.keras.backend as bk
+from tensorflow.python.keras.metrics import MeanMetricWrapper
 
 
 def gru(units):
@@ -114,4 +116,44 @@ class Decoder(tf.keras.Model):
     x = self.fc(output)
 
     return x, state, attention_weights
+
+
+class MaskedCategoricalAccuracy(MeanMetricWrapper):
+  def __init__(self, mask_id, name='masked_categorical_accuracy', dtype=None):
+      super(MaskedCategoricalAccuracy, self).__init__(
+          masked_categorical_accuracy, name, dtype=dtype, mask_id=mask_id)
+
+
+def masked_categorical_accuracy(y_true, y_pred, mask_id):
+    true_ids = bk.argmax(y_true, axis=-1)
+    pred_ids = bk.argmax(y_pred, axis=-1)
+    maskBool = bk.not_equal(true_ids, mask_id)
+    maskInt64 = bk.cast(maskBool, 'int64')
+    maskFloatX = bk.cast(maskBool, bk.floatx())
+
+    count = bk.sum(maskFloatX)
+    equals = bk.equal(true_ids * maskInt64,
+                    pred_ids * maskInt64)
+    sum = bk.sum(bk.cast(equals, bk.floatx()) * maskFloatX)
+    return sum / count
+
+
+class ExactMatchedAccuracy(MeanMetricWrapper):
+  def __init__(self, mask_id, name='exact_matched_accuracy', dtype=None):
+      super(ExactMatchedAccuracy, self).__init__(
+          exact_matched_accuracy, name, dtype=dtype, mask_id=mask_id)
+
+
+def exact_matched_accuracy(y_true, y_pred, mask_id):
+    true_ids = bk.argmax(y_true, axis=-1)
+    pred_ids = bk.argmax(y_pred, axis=-1)
+
+    maskBool = bk.not_equal(true_ids, mask_id)
+    maskInt64 = bk.cast(maskBool, 'int64')
+
+    diff = (true_ids - pred_ids) * maskInt64
+    matches = bk.cast(bk.not_equal(diff, bk.zeros_like(diff)), 'int64')
+    matches = bk.sum(matches, axis=-1)
+    matches = bk.cast(bk.equal(matches, bk.zeros_like(matches)), bk.floatx())
+    return bk.mean(matches)
 
