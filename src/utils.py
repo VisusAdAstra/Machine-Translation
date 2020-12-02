@@ -213,4 +213,39 @@ def plot_training(history):
     plt.legend(['Train', 'Validation'], loc='lower right')
     plt.show()
 
-    
+
+def plot_training2(history):
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation loss values
+    plt.plot(history[:, 1])
+    plt.plot(history[:, 4])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation masked_categorical_accuracy values
+    plt.plot(history[:, 2])
+    plt.plot(history[:, 5])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()
+
+    figure(num=None, figsize=(11, 7))
+
+    # Plot training & validation exact_matched_accuracy values
+    plt.plot(history[:, 3])
+    plt.plot(history[:, 6])
+    plt.title('Model exact match accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='lower right')
+    plt.show()
+
+
