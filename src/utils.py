@@ -231,7 +231,7 @@ def plot_training2(history):
     # Plot training & validation masked_categorical_accuracy values
     plt.plot(history[:, 2])
     plt.plot(history[:, 5])
-    plt.title('Model accuracy')
+    plt.title('Model categorical accuracy')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Validation'], loc='lower right')
