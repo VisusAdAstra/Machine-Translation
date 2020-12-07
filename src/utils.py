@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib.pyplot import figure
 import tensorflow as tf
+from transformers import GlueDataTrainingArguments as DataTrainingArguments
+from transformers import GlueDataset
 
 
 def preprocess(sentence):
@@ -214,3 +216,34 @@ def plot_training(history):
     plt.show()
 
     
+def get_datasets(config):
+  data_args = DataTrainingArguments(
+        task_name=config["task_name"], data_dir=config["data_dir"])
+  tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
+  train_dataset = GlueDataset(
+      data_args,
+      tokenizer=tokenizer,
+      mode="train",
+      cache_dir=config["data_dir"])
+  eval_dataset = GlueDataset(
+      data_args,
+      tokenizer=tokenizer,
+      mode="dev",
+      cache_dir=config["data_dir"])
+  # Only use the first half for validation
+  eval_dataset = eval_dataset[:len(eval_dataset) // 2]
+  return train_dataset, eval_dataset
+
+
+def recover_checkpoint(tune_checkpoint_dir, model_name=None):
+    if tune_checkpoint_dir is None or len(tune_checkpoint_dir) == 0:
+        return model_name
+    # Get subdirectory used for Huggingface.
+    subdirs = [
+        os.path.join(tune_checkpoint_dir, name)
+        for name in os.listdir(tune_checkpoint_dir)
+        if os.path.isdir(os.path.join(tune_checkpoint_dir, name))
+    ]
+    # There should only be 1 subdir.
+    assert len(subdirs) == 1, subdirs
+    return subdirs[0]

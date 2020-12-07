@@ -5,6 +5,18 @@
 import tensorflow as tf
 import tensorflow.keras.backend as bk
 from tensorflow.python.keras.metrics import MeanMetricWrapper
+import logging
+import os
+from typing import Dict, Optional, Tuple
+
+from ray import tune
+
+import transformers
+from transformers.file_utils import is_torch_tpu_available
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
+
+import torch
+from torch.utils.data import Dataset
 
 
 def gru(units):
@@ -156,4 +168,41 @@ def exact_matched_accuracy(y_true, y_pred, mask_id):
     matches = bk.sum(matches, axis=-1)
     matches = bk.cast(bk.equal(matches, bk.zeros_like(matches)), bk.floatx())
     return bk.mean(matches)
+
+
+class TuneTransformerTrainer(transformers.Trainer):
+    def get_optimizers(
+            self, num_training_steps
+    ):
+        self.current_optimizer, self.current_scheduler = super(
+        ).get_optimizers(num_training_steps)
+        return (self.current_optimizer, self.current_scheduler)
+
+    def evaluate(self,
+                 eval_dataset= None):
+        eval_dataloader = self.get_eval_dataloader(eval_dataset)
+        output = self._prediction_loop(
+            eval_dataloader, description="Evaluation")
+        self._log(output.metrics)
+
+        self.save_state()
+
+        tune.report(**output.metrics)
+
+        return output.metrics
+
+    def save_state(self):
+        with tune.checkpoint_dir(step=self.global_step) as checkpoint_dir:
+            self.args.output_dir = checkpoint_dir
+            # This is the directory name that Huggingface requires.
+            output_dir = os.path.join(
+                self.args.output_dir,
+                f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+            self.save_model(output_dir)
+            if self.is_world_master():
+                torch.save(self.current_optimizer.state_dict(),
+                           os.path.join(output_dir, "optimizer.pt"))
+                torch.save(self.current_scheduler.state_dict(),
+                           os.path.join(output_dir, "scheduler.pt"))
+
 
