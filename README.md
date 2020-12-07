@@ -25,7 +25,7 @@ Setup path environment
 ## Usage
 ```
 Load checkpoint/weights
-Run jupyter notebook
+Run NMT.ipynb
 ```
 
 ## Contributing
